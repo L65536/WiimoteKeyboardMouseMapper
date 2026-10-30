@@ -2,6 +2,11 @@
 #include "ConfigManager.h"
 #include <string>
 
+namespace {
+    constexpr WORD MOUSE_WHEEL_UP = 0x1000;
+    constexpr WORD MOUSE_WHEEL_DOWN = 0x1001;
+}
+
 OutputRouter::OutputRouter() {
     // Initialize state
 }
@@ -80,12 +85,25 @@ void OutputRouter::Reset() {
 void OutputRouter::SendKey(WORD vKey, bool down) {
     INPUT input = { 0 };
     
-    // Check if this is a mouse button
-    if (vKey == VK_LBUTTON || vKey == VK_RBUTTON || vKey == VK_MBUTTON) {
+    // Check if this is a mouse button or wheel
+    if (vKey == VK_LBUTTON || vKey == VK_RBUTTON || vKey == VK_MBUTTON ||
+        vKey == MOUSE_WHEEL_UP || vKey == MOUSE_WHEEL_DOWN) {
         input.type = INPUT_MOUSE;
-        if (vKey == VK_LBUTTON) input.mi.dwFlags = down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP;
-        else if (vKey == VK_RBUTTON) input.mi.dwFlags = down ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP;
-        else if (vKey == VK_MBUTTON) input.mi.dwFlags = down ? MOUSEEVENTF_MIDDLEDOWN : MOUSEEVENTF_MIDDLEUP;
+        if (vKey == VK_LBUTTON) {
+            input.mi.dwFlags = down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP;
+        } else if (vKey == VK_RBUTTON) {
+            input.mi.dwFlags = down ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP;
+        } else if (vKey == VK_MBUTTON) {
+            input.mi.dwFlags = down ? MOUSEEVENTF_MIDDLEDOWN : MOUSEEVENTF_MIDDLEUP;
+        } else if (vKey == MOUSE_WHEEL_UP) {
+            input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+            input.mi.mouseData = WHEEL_DELTA;
+            if (!down) return;
+        } else if (vKey == MOUSE_WHEEL_DOWN) {
+            input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+            input.mi.mouseData = static_cast<DWORD>(-static_cast<LONG>(WHEEL_DELTA));
+            if (!down) return;
+        }
     } else {
         input.type = INPUT_KEYBOARD;
         input.ki.wVk = vKey;
