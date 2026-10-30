@@ -115,7 +115,8 @@ void OutputRouter::SendKey(WORD vKey, bool down) {
         if (vKey == VK_LWIN || vKey == VK_RWIN || vKey == VK_LEFT || vKey == VK_UP || 
             vKey == VK_RIGHT || vKey == VK_DOWN || vKey == VK_PRIOR || vKey == VK_NEXT || 
             vKey == VK_END || vKey == VK_HOME || vKey == VK_INSERT || vKey == VK_DELETE ||
-            vKey == VK_DIVIDE || vKey == VK_RCONTROL || vKey == VK_RMENU) {
+            vKey == VK_DIVIDE || vKey == VK_RCONTROL || vKey == VK_RMENU ||
+            vKey == VK_VOLUME_MUTE || vKey == VK_VOLUME_UP || vKey == VK_VOLUME_DOWN) {
             input.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
         }
     }
