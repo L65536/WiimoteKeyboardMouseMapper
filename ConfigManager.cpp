@@ -7,6 +7,11 @@
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
+namespace {
+constexpr WORD MOUSE_WHEEL_UP = 0x1000;
+constexpr WORD MOUSE_WHEEL_DOWN = 0x1001;
+}
+
 ConfigManager::ConfigManager() {
   // Ensure profiles directory exists
   try {
@@ -301,6 +306,10 @@ WORD ConfigManager::StringToVK(const std::string &keyStr) const {
     return VK_RBUTTON;
   if (keyStr == "Mouse Middle")
     return VK_MBUTTON;
+  if (keyStr == "Mouse Wheel Up")
+    return MOUSE_WHEEL_UP;
+  if (keyStr == "Mouse Wheel Down")
+    return MOUSE_WHEEL_DOWN;
 
   for (int i = 1; i < 256; ++i) {
     if (VKToString((WORD)i) == keyStr)
@@ -341,6 +350,10 @@ std::string ConfigManager::VKToString(WORD vk) const {
     return "Mouse Right";
   case VK_MBUTTON:
     return "Mouse Middle";
+  case MOUSE_WHEEL_UP:
+    return "Mouse Wheel Up";
+  case MOUSE_WHEEL_DOWN:
+    return "Mouse Wheel Down";
   }
 
   char name[64];
