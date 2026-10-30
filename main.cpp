@@ -23,6 +23,18 @@
 namespace {
 constexpr WORD MOUSE_WHEEL_UP = 0x1000;
 constexpr WORD MOUSE_WHEEL_DOWN = 0x1001;
+constexpr float kGuiScaleX1 = 1.0f;
+constexpr float kGuiScaleX2 = 2.0f;
+constexpr float kGuiScaleX3 = 3.0f;
+}
+
+static float g_guiScale = kGuiScaleX1;
+
+static void ApplyGuiScale(float scale) {
+  ImGuiIO &io = ImGui::GetIO();
+  io.FontGlobalScale = scale;
+  ImGuiStyle &style = ImGui::GetStyle();
+  style.ScaleAllSizes(scale);
 }
 
 // Data
@@ -213,11 +225,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LocalFree(argv);
   }
 
+  // Enable Windows DPI awareness for HiDPI compatibility.
+  SetProcessDPIAware();
+
+  // ConfigManager Load (Loads the last active session)
   ConfigManager::GetInstance().LoadActiveConfig();
 
+  // Create application window
   HICON hAppIcon = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_ICON1));
-  WNDCLASSEXW wc = {sizeof(wc), CS_CLASSDC, WndProc, 0L, 0L,
-                    hInstance, hAppIcon, nullptr, nullptr, nullptr,
+  WNDCLASSEXW wc = {sizeof(wc),          CS_CLASSDC, WndProc,    0L,         0L,
+                    hInstance,           hAppIcon,   nullptr,    nullptr,    nullptr,
                     L"WiimoteKeyMap UI", hAppIcon};
   ::RegisterClassExW(&wc);
   HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"WiimoteKeyMapApp",
@@ -241,8 +258,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   ::UpdateWindow(hwnd);
 
+  // Initialize System Tray
   AddTrayIcon(hwnd);
 
+  // Register connect/disconnect notifications.
+  // Callbacks are set after AddTrayIcon so g_nid is ready before they fire.
   g_wiimote.SetOnConnected([]() {
     ShowNotification(L"Wii Remote Connected", L"Wii Remote Connected.");
   });
@@ -250,15 +270,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     ShowNotification(L"Wii Remote Disconnected", L"Wii Remote Disconnected.");
   });
 
+  // bgThread: input routing + passive HID reconnection
+  // scanThread: continuous BT inquiry (ScanOnce loop)
   std::thread bgThread(BackgroundTask);
   std::thread scanThread(ScanTask);
 
+  // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
   io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
+  // Setup Dear ImGui style (Premium Dark Mode)
   ImGui::StyleColorsDark();
   ImGuiStyle &style = ImGui::GetStyle();
   style.WindowRounding = 8.0f;
@@ -277,9 +301,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.10f, 0.20f, 0.40f, 1.0f);
   style.Colors[ImGuiCol_Separator] = ImVec4(0.20f, 0.20f, 0.20f, 1.0f);
 
+  ApplyGuiScale(g_guiScale);
+
+  // Setup Platform/Renderer backends
   ImGui_ImplWin32_Init(hwnd);
   ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
 
+  // Main loop
   bool done = false;
   while (!done) {
     MSG msg;
@@ -300,12 +328,30 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       CreateRenderTarget();
     }
 
+    // Start the Dear ImGui frame
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
+    // 0. Top Menu Bar
     if (ImGui::BeginMainMenuBar()) {
       if (ImGui::BeginMenu("Settings")) {
+        if (ImGui::BeginMenu("GUI Scale")) {
+          if (ImGui::MenuItem("x1", NULL, g_guiScale == kGuiScaleX1)) {
+            g_guiScale = kGuiScaleX1;
+            ApplyGuiScale(g_guiScale);
+          }
+          if (ImGui::MenuItem("x2", NULL, g_guiScale == kGuiScaleX2)) {
+            g_guiScale = kGuiScaleX2;
+            ApplyGuiScale(g_guiScale);
+          }
+          if (ImGui::MenuItem("x3", NULL, g_guiScale == kGuiScaleX3)) {
+            g_guiScale = kGuiScaleX3;
+            ApplyGuiScale(g_guiScale);
+          }
+          ImGui::EndMenu();
+        }
+
         bool tray = ConfigManager::GetInstance().GetMinimizeToTray();
         if (ImGui::MenuItem("Minimize to System Tray", NULL, &tray))
           ConfigManager::GetInstance().SetMinimizeToTray(tray);
@@ -314,6 +360,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       ImGui::EndMainMenuBar();
     }
 
+    // 1. Connection Panel
     ImGui::SetNextWindowPos(ImVec2(10, 30));
     ImGui::SetNextWindowSize(ImVec2(580, 140));
     ImGui::Begin("Device Connection", nullptr,
@@ -327,6 +374,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     ImVec4 statusColor = isConnected ? ImVec4(0.2f, 1.0f, 0.2f, 1.0f)
                                      : ImVec4(1.0f, 0.8f, 0.0f, 1.0f);
 
+    // Status LED
     ImGui::TextUnformatted("Status:");
     ImGui::SameLine();
     ImVec2 p = ImGui::GetCursorScreenPos();
@@ -346,6 +394,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     if (ImGui::Button("Search & Connect", ImVec2(-1, 30))) {
       if (!isConnected && !g_isSearching) {
+        // Detached thread for non-blocking UI
         std::thread([]() {
           g_isSearching.store(true);
           g_wiimote.ActiveSearchConnect();
@@ -355,6 +404,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     ImGui::End();
 
+    // 2. Mapping Panel
     ImGui::SetNextWindowPos(ImVec2(10, 180));
     ImGui::SetNextWindowSize(ImVec2(580, 570));
     ImGui::Begin("Keyboard Mappings", nullptr,
@@ -365,13 +415,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     static char newProfileName[64] = "";
     auto profiles = ConfigManager::GetInstance().ListProfiles();
-    std::string currentProfile = ConfigManager::GetInstance().GetCurrentProfileName();
+    std::string currentProfile =
+        ConfigManager::GetInstance().GetCurrentProfileName();
 
     int currentIdx = 0;
     for (int i = 0; i < (int)profiles.size(); ++i) {
       if (profiles[i] == currentProfile) { currentIdx = i; break; }
     }
 
+    // Row 1: dropdown  |  Quick Save  |  Delete
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Profile:");
     ImGui::SameLine();
@@ -407,6 +459,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                             : "Delete \"%s\"", currentProfile.c_str());
     ImGui::EndDisabled();
 
+    // Row 2: Import from file  |  Export to file
     if (ImGui::Button("Import from File...")) {
       std::string path = ShowOpenFileDialog();
       if (!path.empty())
@@ -426,6 +479,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (ImGui::IsItemHovered())
       ImGui::SetTooltip("Save current mappings to a JSON file of your choice.");
 
+    // Row 3: Save as new profile inside profiles/ dir
     ImGui::AlignTextToFramePadding();
     ImGui::Text("Save as New:");
     ImGui::SameLine();
@@ -479,6 +533,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         ImGui::TableNextRow(ImGuiTableRowFlags_None, 28.0f);
         ImGui::PushID(button.c_str());
 
+        // Column 0: Clear
         ImGui::TableSetColumnIndex(0);
         if (ImGui::Button("X", ImVec2(24, 22))) {
           ConfigManager::GetInstance().SetMappedKeys(button, {});
@@ -486,10 +541,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         if (ImGui::IsItemHovered())
           ImGui::SetTooltip("Clear mapping");
 
+        // Column 1: Label
         ImGui::TableSetColumnIndex(1);
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted(button.c_str());
 
+        // Column 2: Mapping
         ImGui::TableSetColumnIndex(2);
         std::string mappingText = "";
         bool isThisRecording = (recordingButton == button);
@@ -536,8 +593,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         if (isThisRecording)
           ImGui::PopStyleColor();
         if (ImGui::IsItemHovered())
-          ImGui::SetTooltip("Click to start/stop recording. Mouse click cancels.");
+          ImGui::SetTooltip(
+              "Click to start/stop recording. Mouse click cancels.");
 
+        // Column 3: Mode
         ImGui::TableSetColumnIndex(3);
         const char *mouseActions[] = {"Kbd", "M-Left", "M-Right", "M-Mid",
                                       "M-Wheel Up", "M-Wheel Down"};
@@ -576,24 +635,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       ImGui::EndTable();
     }
 
+    // Global key recording logic (Native Win32 Listener)
     if (!recordingButton.empty()) {
       std::vector<WORD> currentlyHeld;
       for (int i = 1; i < 256; ++i) {
+        // Exclude mouse buttons
         if (i == VK_LBUTTON || i == VK_RBUTTON || i == VK_MBUTTON ||
             i == VK_XBUTTON1 || i == VK_XBUTTON2)
           continue;
 
         if (GetAsyncKeyState(i) & 0x8000) {
+          // Ignore keys that were already down when recording started until
+          // they are released
           auto it = std::find(initialHeldKeys.begin(), initialHeldKeys.end(),
                               (WORD)i);
           if (it != initialHeldKeys.end())
             continue;
 
+          // Skip generic modifiers to avoid duplicates and 'phantom' stuck
+          // states. We exclusively use L/R versions (LSHIFT, RSHIFT, etc.)
           if (i == VK_SHIFT || i == VK_CONTROL || i == VK_MENU)
             continue;
 
           currentlyHeld.push_back((WORD)i);
         } else {
+          // Once released, remove from initial skip list
           auto it = std::find(initialHeldKeys.begin(), initialHeldKeys.end(),
                               (WORD)i);
           if (it != initialHeldKeys.end())
@@ -604,8 +670,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       auto now = std::chrono::steady_clock::now();
       bool isAnyKeyDownNow = !currentlyHeld.empty();
 
+      // Cancel on Mouse Click during Keyboard Recording
       bool cancelledByMouse = false;
+      // Only cancel if clicked OUTSIDE any ImGui window or specific mapping
+      // buttons Here, we'll simplify: if clicking, check if we were clicking
+      // the button we just started/stopped
       if (ImGui::IsMouseClicked(0) || ImGui::IsMouseClicked(1)) {
+        // Ensure we don't cancel if we just clicked the recording button to
+        // start/stop
         if (!wasAnyKeyDown &&
             (std::chrono::duration_cast<std::chrono::milliseconds>(
                  now - recordingStartTime)
@@ -621,6 +693,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
       if (isAnyKeyDownNow) {
         wasAnyKeyDown = true;
         if (currentlyHeld.size() < recordedKeys.size()) {
+          // A key was released. Start buffer to see if it's a staggered combo
+          // release.
           if (!isReleaseBufferActive) {
             isReleaseBufferActive = true;
             releaseStartTime = now;
@@ -628,17 +702,21 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
           } else if (std::chrono::duration_cast<std::chrono::milliseconds>(
                          now - releaseStartTime)
                          .count() > 150) {
+            // Buffer expired, this is an intentional release to a smaller set
             recordedKeys = currentlyHeld;
             isReleaseBufferActive = false;
           }
         } else {
+          // Keys were added or remained the same size - reset buffer
           recordedKeys = currentlyHeld;
           isReleaseBufferActive = false;
         }
       } else if (wasAnyKeyDown && !cancelledByMouse) {
+        // Transition to ALL RELEASED - Save the last state seen
         if (!recordedKeys.empty()) {
           ConfigManager::GetInstance().SetMappedKeys(recordingButton,
                                                      recordedKeys);
+          // SaveActiveConfig is called inside SetMappedKeys
         }
         recordingButton = "";
         recordedKeys.clear();
@@ -650,6 +728,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     ImGui::End();
 
+    // Rendering
     ImGui::Render();
     const float clear_color_with_alpha[4] = {0.05f, 0.05f, 0.05f, 1.00f};
     g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView,
@@ -658,9 +737,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                                                clear_color_with_alpha);
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-    g_pSwapChain->Present(1, 0);
+    g_pSwapChain->Present(1, 0); // Present with vsync
   }
 
+  // Cleanup
   g_appRunning = false;
   bgThread.join();
   scanThread.join();
@@ -678,6 +758,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   return 0;
 }
 
+// DX11 Boilerplate
 bool CreateDeviceD3D(HWND hWnd) {
   DXGI_SWAP_CHAIN_DESC sd;
   ZeroMemory(&sd, sizeof(sd));
@@ -766,7 +847,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return 0;
   case WM_SYSCOMMAND:
     if ((wParam & 0xfff0) == SC_KEYMENU)
-      return 0;
+      return 0; // Disable ALT app menu
     if ((wParam & 0xfff0) == SC_MINIMIZE &&
         ConfigManager::GetInstance().GetMinimizeToTray()) {
       ::ShowWindow(hWnd, SW_HIDE);
