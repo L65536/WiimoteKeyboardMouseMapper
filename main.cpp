@@ -32,9 +32,29 @@ static float g_guiScale = kGuiScaleX1;
 
 static void ApplyGuiScale(float scale) {
   ImGuiIO &io = ImGui::GetIO();
+  float oldScale = io.FontGlobalScale > 0.0f ? io.FontGlobalScale : 1.0f;
+
   io.FontGlobalScale = scale;
   ImGuiStyle &style = ImGui::GetStyle();
   style.ScaleAllSizes(scale);
+
+  if (g_hwnd && IsWindowVisible(g_hwnd)) {
+    RECT rc;
+    if (GetWindowRect(g_hwnd, &rc)) {
+      int oldW = rc.right - rc.left;
+      int oldH = rc.bottom - rc.top;
+
+      float ratio = scale / oldScale;
+      int newW = (int)std::round(oldW * ratio);
+      int newH = (int)std::round(oldH * ratio);
+
+      newW = std::max(newW, 520);
+      newH = std::max(newH, 680);
+
+      SetWindowPos(g_hwnd, nullptr, rc.left, rc.top, newW, newH,
+                   SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+  }
 }
 
 // Data
