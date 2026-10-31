@@ -310,6 +310,12 @@ WORD ConfigManager::StringToVK(const std::string &keyStr) const {
     return MOUSE_WHEEL_UP;
   if (keyStr == "Mouse Wheel Down")
     return MOUSE_WHEEL_DOWN;
+  if (keyStr == "Volume Mute")
+    return VK_VOLUME_MUTE;
+  if (keyStr == "Volume Up")
+    return VK_VOLUME_UP;
+  if (keyStr == "Volume Down")
+    return VK_VOLUME_DOWN;
 
   for (int i = 1; i < 256; ++i) {
     if (VKToString((WORD)i) == keyStr)
@@ -354,6 +360,12 @@ std::string ConfigManager::VKToString(WORD vk) const {
     return "Mouse Wheel Up";
   case MOUSE_WHEEL_DOWN:
     return "Mouse Wheel Down";
+  case VK_VOLUME_MUTE:
+    return "Volume Mute";
+  case VK_VOLUME_UP:
+    return "Volume Up";
+  case VK_VOLUME_DOWN:
+    return "Volume Down";
   }
 
   char name[64];
