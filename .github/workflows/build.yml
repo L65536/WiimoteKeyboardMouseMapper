@@ -10,12 +10,15 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-
+        
+      - name: Install modern CMake
+        uses: lukka/get-cmake@latest
+        
       - name: Configure CMake
         run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64
 
