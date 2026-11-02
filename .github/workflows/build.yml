@@ -23,6 +23,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Wiimote
+          name: Wiimote-${{ github.run_id }}.${{ github.run_number }}.${{ github.run_attempt }}
           path: build/Release/Wiimote.exe
           if-no-files-found: error
