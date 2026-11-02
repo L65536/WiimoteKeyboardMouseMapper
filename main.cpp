@@ -362,7 +362,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     // 1. Connection Panel
     ImGui::SetNextWindowPos(ImVec2(10, 30));
-    ImGui::SetNextWindowSize(ImVec2(580, 140));
+    ImGui::SetNextWindowSize(ImVec2(0, 0));
+    //ImGui::SetNextWindowSize(ImVec2(580, 140));
     ImGui::Begin("Device Connection", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove);
@@ -406,7 +407,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     // 2. Mapping Panel
     ImGui::SetNextWindowPos(ImVec2(10, 180));
-    ImGui::SetNextWindowSize(ImVec2(580, 570));
+    ImGui::SetNextWindowSize(ImVec2(0, 0));
+    // ImGui::SetNextWindowSize(ImVec2(580, 570));
     ImGui::Begin("Keyboard Mappings", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove);
@@ -852,7 +854,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         ConfigManager::GetInstance().GetMinimizeToTray()) {
       ::ShowWindow(hWnd, SW_HIDE);
       g_WindowVisible = false;
-      ShowNotification(L"WiimoteKeyMapApp",
+      if(0) ShowNotification(L"WiimoteKeyMapApp",
                        L"Running in background. "
                        L"Double-click the tray icon to restore.");
       return 0;
@@ -882,7 +884,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (ConfigManager::GetInstance().GetMinimizeToTray()) {
       ::ShowWindow(hWnd, SW_HIDE);
       g_WindowVisible = false;
-      ShowNotification(L"WiimoteKeyMapApp",
+      if(0) ShowNotification(L"WiimoteKeyMapApp",
                        L"Running in the background. "
                        L"Double-click the tray icon to restore.");
     } else {
