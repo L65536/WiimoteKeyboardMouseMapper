@@ -345,10 +345,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             g_guiScale = kGuiScaleX2;
             ApplyGuiScale(g_guiScale);
           }
-          if (ImGui::MenuItem("x3", NULL, g_guiScale == kGuiScaleX3)) {
-            g_guiScale = kGuiScaleX3;
-            ApplyGuiScale(g_guiScale);
-          }
           ImGui::EndMenu();
         }
 
@@ -361,9 +357,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
 
     // 1. Connection Panel
-    ImGui::SetNextWindowPos(ImVec2(10, 30));
-    ImGui::SetNextWindowSize(ImVec2(0, 0));
-    //ImGui::SetNextWindowSize(ImVec2(580, 140));
+    ImGui::SetNextWindowPos(ImVec2(10, 30));    
+    ImGui::SetNextWindowSize(ImVec2(580, 140));
     ImGui::Begin("Device Connection", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove);
@@ -406,9 +401,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     ImGui::End();
 
     // 2. Mapping Panel
-    ImGui::SetNextWindowPos(ImVec2(10, 180));
-    ImGui::SetNextWindowSize(ImVec2(0, 0));
-    // ImGui::SetNextWindowSize(ImVec2(580, 570));
+    ImGui::SetNextWindowPos(ImVec2(10, 180));    
+    ImGui::SetNextWindowSize(ImVec2(580, 600));
     ImGui::Begin("Keyboard Mappings", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove);
