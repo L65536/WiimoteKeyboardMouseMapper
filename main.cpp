@@ -238,7 +238,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     L"WiimoteKeyMap UI", hAppIcon};
   ::RegisterClassExW(&wc);
   HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"WiimoteKeyMapApp",
-                              WS_OVERLAPPEDWINDOW, 100, 100, 620, 770, nullptr,
+                              WS_OVERLAPPEDWINDOW, 100, 100, 620, 800, nullptr,
                               nullptr, wc.hInstance, nullptr);
   g_hwnd = hwnd;
 
@@ -402,7 +402,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     // 2. Mapping Panel
     ImGui::SetNextWindowPos(ImVec2(10, 180));    
-    ImGui::SetNextWindowSize(ImVec2(580, 600));
+    ImGui::SetNextWindowSize(ImVec2(580, 570));
     ImGui::Begin("Keyboard Mappings", nullptr,
                  ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize |
                      ImGuiWindowFlags_NoMove);
