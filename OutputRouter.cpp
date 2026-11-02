@@ -31,7 +31,8 @@ void OutputRouter::Route(const WiiRemoteState& state) {
                 for (WORD vKey : keys) {
                     SendKey(vKey, true);
                 }
-                rs.nextRepeat = now + std::chrono::milliseconds(33); // ~30Hz
+                rs.nextRepeat = now + std::chrono::milliseconds(333); // ~3Hz
+                // rs.nextRepeat = now + std::chrono::milliseconds(33); // ~30Hz
             }
         } else if (rs.isHeld) {
             // Release (Reverse order for shortcuts like Ctrl+C)
