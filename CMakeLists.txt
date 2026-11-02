@@ -43,13 +43,13 @@ set(IMGUI_SOURCES
 
 add_executable(Wiimote WIN32 ${SOURCES} ${HEADERS} ${IMGUI_SOURCES} resource.rc)
 
-target_include_directories(WiimoteKeyMapApp PRIVATE 
+target_include_directories(Wiimote PRIVATE 
     ${imgui_SOURCE_DIR} 
     ${imgui_SOURCE_DIR}/backends
 )
 
 # Link required Windows and DirectX libraries
-target_link_libraries(WiimoteKeyMapApp PRIVATE
+target_link_libraries(Wiimote PRIVATE
     setupapi.lib
     hid.lib
     bthprops.lib
