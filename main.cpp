@@ -68,7 +68,7 @@ void AddTrayIcon(HWND hWnd) {
   g_nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
   g_nid.uCallbackMessage = WM_TRAYICON;
   g_nid.hIcon = LoadIconW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDI_ICON1));
-  lstrcpyW(g_nid.szTip, L"WiimoteKeyMapApp");
+  lstrcpyW(g_nid.szTip, L"WiimoteMapper");
   Shell_NotifyIconW(NIM_ADD, &g_nid);
 }
 
@@ -123,7 +123,7 @@ void ShowTrayContextMenu(HWND hWnd) {
   GetCursorPos(&pt);
   HMENU hMenu = CreatePopupMenu();
   InsertMenuW(hMenu, 0, MF_BYPOSITION | MF_STRING, ID_TRAY_OPEN,
-              L"Open WiimoteKeyMapApp");
+              L"Open WiimoteMapper");
   InsertMenuW(hMenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
   InsertMenuW(hMenu, 2, MF_BYPOSITION | MF_STRING, ID_TRAY_EXIT, L"Exit");
 
@@ -237,7 +237,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     hInstance,           hAppIcon,   nullptr,    nullptr,    nullptr,
                     L"WiimoteKeyMap UI", hAppIcon};
   ::RegisterClassExW(&wc);
-  HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"WiimoteKeyMapApp",
+  HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"WiimoteMapper",
                               WS_OVERLAPPEDWINDOW, 100, 100, 620, 860, nullptr,
                               nullptr, wc.hInstance, nullptr);
   g_hwnd = hwnd;
@@ -848,7 +848,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         ConfigManager::GetInstance().GetMinimizeToTray()) {
       ::ShowWindow(hWnd, SW_HIDE);
       g_WindowVisible = false;
-      if(0) ShowNotification(L"WiimoteKeyMapApp",
+      if(0) ShowNotification(L"WiimoteMapper",
                        L"Running in background. "
                        L"Double-click the tray icon to restore.");
       return 0;
@@ -878,7 +878,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (ConfigManager::GetInstance().GetMinimizeToTray()) {
       ::ShowWindow(hWnd, SW_HIDE);
       g_WindowVisible = false;
-      if(0) ShowNotification(L"WiimoteKeyMapApp",
+      if(0) ShowNotification(L"WiimoteMapper",
                        L"Running in the background. "
                        L"Double-click the tray icon to restore.");
     } else {
