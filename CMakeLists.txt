@@ -41,7 +41,7 @@ set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/backends/imgui_impl_dx11.cpp
 )
 
-add_executable(WiimoteKeyMapApp WIN32 ${SOURCES} ${HEADERS} ${IMGUI_SOURCES} resource.rc)
+add_executable(Wiimote WIN32 ${SOURCES} ${HEADERS} ${IMGUI_SOURCES} resource.rc)
 
 target_include_directories(WiimoteKeyMapApp PRIVATE 
     ${imgui_SOURCE_DIR} 
