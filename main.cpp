@@ -237,9 +237,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     hInstance,           hAppIcon,   nullptr,    nullptr,    nullptr,
                     L"WiimoteKeyMap UI", hAppIcon};
   ::RegisterClassExW(&wc);
+  /*
   HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"WiimoteMapper",
                               WS_OVERLAPPEDWINDOW, 100, 100, 620, 860, nullptr,
                               nullptr, wc.hInstance, nullptr);
+  */
+  HWND hwnd = ::CreateWindowExW(
+    WS_EX_TOOLWINDOW,          // tool window style
+    wc.lpszClassName,          // class name
+    L"WiimoteMapper",          // title
+    WS_OVERLAPPEDWINDOW,       // regular window frame
+    100, 100, 620, 860,        // x, y, w, h
+    nullptr, nullptr, wc.hInstance, nullptr
+  );
+  
   g_hwnd = hwnd;
 
   if (!CreateDeviceD3D(hwnd)) {
