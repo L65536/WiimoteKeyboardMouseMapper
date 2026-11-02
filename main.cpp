@@ -238,7 +238,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
                     L"WiimoteKeyMap UI", hAppIcon};
   ::RegisterClassExW(&wc);
   HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"WiimoteKeyMapApp",
-                              WS_OVERLAPPEDWINDOW, 100, 100, 620, 800, nullptr,
+                              WS_OVERLAPPEDWINDOW, 100, 100, 620, 860, nullptr,
                               nullptr, wc.hInstance, nullptr);
   g_hwnd = hwnd;
 
