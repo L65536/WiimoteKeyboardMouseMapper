@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(WiimoteKeyMapApp VERSION 1.1.1 LANGUAGES CXX)
+project(WiimoteMapper VERSION 1.1.x LANGUAGES CXX)
 add_definitions(-DAPP_VERSION="${PROJECT_VERSION}")
 
 set(CMAKE_CXX_STANDARD 20)
